@@ -4,7 +4,7 @@ import { Command, ValidationError } from "@cliffy/command";
 import { Logger } from "@std/log";
 import * as Color from "@std/fmt/colors";
 import * as Duration from "@std/fmt/duration";
-import { assert } from '@std/assert';
+import { assert } from "@std/assert";
 import { BoxFormatter, Input, setupLogger, Solution } from "@/lib/cli.ts";
 
 if (import.meta.main) {
@@ -23,7 +23,10 @@ export async function main() {
     .env("DEBUG=<enable:boolean>", "Enable debug output.")
     .arguments("[puzzle:string]")
     .option("-e,--example", "Input the example data, instead of the real data.")
-    .option("-s,--spoilers", "Obscure the answer to avoid sharing spoilers.")
+    .option(
+      "-s,--spoiler-free",
+      "Obscure the answer to avoid sharing spoilers.",
+    )
     .action(async (options, puzzle) => {
       const logger = setupLogger(!!options.debug);
 
@@ -74,7 +77,7 @@ export async function main() {
       | Run the chosen puzzle
       */
       await runPuzzleSolution(logger, confirmedPuzzle, {
-        spoilers: !!options.spoilers,
+        spoilerFree: !!options.spoilerFree,
         example: !!options.example,
       });
     })
@@ -89,7 +92,7 @@ export async function main() {
           "Input the example data, instead of the real data.",
         )
         .option(
-          "-s,--spoilers",
+          "-s,--spoiler-free",
           "Obscure the answer to avoid sharing spoilers.",
         )
         .action(
@@ -100,7 +103,7 @@ export async function main() {
 
             console.log(
               `\nRunning all available puzzles${
-                options.spoilers
+                options.spoilerFree
                   ? " " +
                     Color.italic(
                       Color.black(Color.bgWhite(" in Spoiler-free Mode ")),
@@ -117,7 +120,7 @@ export async function main() {
                   logger,
                   puzzle,
                   {
-                    spoilers: !!options.spoilers,
+                    spoilerFree: !!options.spoilerFree,
                     example: !!options.example,
                   },
                 );
@@ -155,10 +158,10 @@ async function runPuzzleSolution(
   logger: Logger,
   puzzle: string,
   {
-    spoilers: noSpoilers = false,
+    spoilerFree = false,
     example: useExampleInput = false,
   }: {
-    spoilers?: boolean;
+    spoilerFree?: boolean;
     example?: boolean;
   },
 ) {
@@ -202,7 +205,7 @@ ${puzzleFile}`.trim(),
     performance.mark("solution-start");
     await mod.solution({
       debug: (str) => {
-        const _str = (typeof str === "object" || Array.isArray(str))
+        const _str = typeof str === "object" || Array.isArray(str)
           ? JSON.stringify(str)
           : str.toString();
         const since = Duration.format(+new Date() - +startTime, {
@@ -214,9 +217,10 @@ ${puzzleFile}`.trim(),
             `[DEBUG]`,
           )
         } ${
-          _str.toString().split("\n").map((line, i) =>
-            i === 0 ? `${line}${since ? Color.dim(` +${since}`) : ""}` : line
-          ).join("\n")
+          _str.toString().split("\n").map((line, i) => {
+            const l = spoilerFree ? line.replace(/\S/g, "*") : line;
+            return i === 0 ? `${l}${since ? Color.dim(` +${since}`) : ""}` : l;
+          }).join("\n")
         }`));
       },
       answer: (value) => {
@@ -239,7 +243,7 @@ ${puzzleFile}`.trim(),
         boxHeading,
         `ANSWER ▶︎ ${
           Color.reset(
-            Color.black(Color.bgWhite(` ${noSpoilers ? "*****" : answer} `)),
+            Color.black(Color.bgWhite(` ${spoilerFree ? "*****" : answer} `)),
           )
         }\nTIME   ▶︎ ${perf.duration}ms`,
       ),
@@ -257,7 +261,7 @@ ${puzzleFile}`.trim(),
       Box.body(
         `${
           Color.bold(err.message)
-        }\n\n${((err.stack || '').split("\n").slice(1).map((l: string) =>
+        }\n\n${((err.stack || "").split("\n").slice(1).map((l: string) =>
           "  " + Color.dim(l.trim())
         ).join("\n"))}`,
       ),
