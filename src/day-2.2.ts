@@ -7,14 +7,14 @@ export const solution: Solution = async ({ loadInput, debug, answer }) => {
     (x) => x,
   ).map((line) => line.split(" ").map((level) => parseInt(level)));
 
-  const analyzedReports = reports.map((report) => {
+  const analyzedReports = reports.map((report): Check => {
     const fullCheck = safetyCheck(report);
     debug(
       `‣${fullCheck.isSafe ? "  [SAFE] " : "[UNSAFE] "}   ${report.join(" ")}`,
       "spoiler-free",
     );
 
-    let dampenedCheck: Check;
+    let dampenedCheck: Check | undefined = undefined;
     if (!fullCheck.isSafe) {
       for (let index = 0; index < report.length; index++) {
         const leakyReport = report.filter((_, indexToRemove) =>
@@ -52,7 +52,7 @@ type Check = {
 };
 
 function safetyCheck(report: number[]): Check {
-  return report.reduce((accum, level, index, allLevels) => {
+  return report.reduce((accum: Check, level, index, allLevels) => {
     if (index !== 0) {
       if (!accum.isSafe) return accum;
       const diff = Math.abs(level - allLevels[index - 1]);
@@ -75,5 +75,5 @@ function safetyCheck(report: number[]): Check {
     }
 
     return accum;
-  }, { direction: 0, isSafe: true, report });
+  }, { direction: 0, isSafe: true, report } satisfies Check);
 }
