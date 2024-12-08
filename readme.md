@@ -1,3 +1,5 @@
+> _Find this over in the monorepo, [loklaan/adventofcode](https://github.com/loklaan/adventofcode) _
+
 # 2024 Deno
 
 Attempts at https://adventofcode.com/2024 in deno.
