@@ -1,4 +1,4 @@
-> _Find this over in the monorepo, [loklaan/adventofcode](https://github.com/loklaan/adventofcode) _
+> _Find this over in the monorepo, [loklaan/adventofcode](https://github.com/loklaan/adventofcode)_
 
 # 2024 Deno
 
